@@ -18,7 +18,7 @@
         aku
     </author>
         
-    <preference name="phonegap-version" value="2.7.0" />
+    <preference name="phonegap-version" value="3.6.0" />
     <feature name="http://api.phonegap.com/1.0/camera"/>
     <feature name="http://api.phonegap.com/1.0/file"/>      
 
