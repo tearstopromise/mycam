@@ -1,69 +1,146 @@
 <!DOCTYPE html>
-<html><!--HTML5 doctype-->
-
+<html>
 <head>
-<meta http-equiv="Content-type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta http-equiv="Pragma" content="no-cache">
-<script type="text/javascript" charset="utf-8" src="intelxdk.js"></script>
-<script type="text/javascript" language="javascript">
-    // This event handler is fired once the intel libraries are ready
-    function onDeviceReady() {
-        //hide splash screen now that our app is ready to run
-        intel.xdk.device.hideSplashScreen();
-        setTimeout(function () {
-            $.ui.launch();
-        }, 50);
-    }
-    //initial event handler to detect when intel is ready to roll
-    document.addEventListener("intel.xdk.device.ready", onDeviceReady, false);
-</script>
-<script src="js/appframework.ui.min.js"></script>
-<script>
-    $.ui.autoLaunch = false;
-    $.ui.useOSThemes = true; //Change this to false to force a device theme
-    $.ui.blockPageScroll();
-    $(document).ready(function () {
-        if ($.ui.useOSThemes && !$.os.ios && $("#afui").get(0).className !== "ios")
-            $("#afui").removeClass("ios");
-    });
-</script>
-<link href="css/icons.css" rel="stylesheet" type="text/css">
-<link href="css/af.ui.css" rel="stylesheet" type="text/css">
+    <title>Capture Photo</title>
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1"/>
+
+    <script type="text/javascript" charset="utf-8" src="js/mycordova.js"></script>
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script>
+
+        function addContact(){
+            var dc = navigator.contacts.create();
+            dc.displayName = "Daves Pizza";
+            var name = new ContactName();
+            name.givenName = "Dave";
+            name.familyName = "Pizza";
+            dc.name = name;
+            var phoneNumbers = [];
+            phoneNumbers[0] = new ContactField('work', '212-555-1234', false);
+            dc.phoneNumbers = phoneNumbers;
+
+            // save
+            dc.save();
+        }
+
+        var deviceReadyDeferred = $.Deferred();
+        var jqmReadyDeferred = $.Deferred();
+
+        document.addEventListener("deviceReady", deviceReady, false);
+
+        function deviceReady() {
+            deviceReadyDeferred.resolve();
+        }
+
+        $(document).one("mobileinit", function () {
+            jqmReadyDeferred.resolve();
+        });
+
+        $.when(deviceReadyDeferred, jqmReadyDeferred).then(doWhenBothFrameworksLoaded);
+
+        function doWhenBothFrameworksLoaded() {
+            var    pictureSource=navigator.camera.PictureSourceType;
+            var    destinationType=navigator.camera.DestinationType;
+
+            // Called when a photo is successfully retrieved
+            //
+            function onPhotoDataSuccess(imageData) {
+                // Get image handle
+                //
+                var smallImage = document.getElementById('smallImage');
+
+                // Unhide image elements
+                //
+                smallImage.style.display = 'block';
+
+                // Show the captured photo
+                // The inline CSS rules are used to resize the image
+                //
+                smallImage.src = "data:image/jpeg;base64," + imageData;
+            }
+
+            // Called when a photo is successfully retrieved
+            //
+            function onPhotoFileSuccess(imageData) {
+                // Get image handle
+                console.log(JSON.stringify(imageData));
+
+                // Get image handle
+                //
+                var smallImage = document.getElementById('smallImage');
+
+                // Unhide image elements
+                //
+                smallImage.style.display = 'block';
+
+                // Show the captured photo
+                // The inline CSS rules are used to resize the image
+                //
+                smallImage.src = imageData;
+            }
+
+            // Called when a photo is successfully retrieved
+            //
+            function onPhotoURISuccess(imageURI) {
+                // Uncomment to view the image file URI
+                // console.log(imageURI);
+
+                // asdfGet image handle
+                //
+                var largeImage = document.getElementById('largeImage');
+
+                // Unhide image elements
+                //
+                largeImage.style.display = 'block';
+
+                // Show the captured photo
+                // The inline CSS rules are used to resize the image
+                //
+                largeImage.src = imageURI;
+            }
+
+            // A button will call this function
+            //
+            function capturePhotoWithData() {
+                // Take picture using device camera and retrieve image as base64-encoded string
+                navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 50 });
+            }
+
+            $("#capture").on("click", function() {
+                navigator.camera.getPicture(onPhotoFileSuccess, onFail, { quality: 50, destinationType: Camera.DestinationType.FILE_URI });
+            });
+
+            // A button will call this function
+            //
+            function getPhoto(source) {
+                // Retrieve image file location from specified source
+                navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 50,
+                    destinationType: destinationType.FILE_URI,
+                    sourceType: source });
+            }
+
+            // Called if something bad happens.
+            //
+            function onFail(message) {
+                alert('Failed because: ' + message);
+            }
+
+            $("#captureWithData").on("click", function(){
+                capturePhotoWithData();
+            })
+
+        }
+    </script>
+
+
 </head>
-
-<div id="afui" class="ios">
-    <div id="header"></div>
-    <div id="content" style="">
-        <div class="panel" title="Main" data-nav="nav_0" id="main" selected="selected"
-        style="">Camera Plugin Sample</div>
-
-        <!-- Camera Plugin Sample -->
-        <script src="cameraPlugin.js"></script>
-        <div class="panel" title="Camera" data-footer="footer_0" data-nav="nav_0" id="cam"
-        data-appbuilder-object="page" style="" data-load="takePicture">
-            <div id="cameradiv">
-                <img id="largeImage" style="display:none;width:100%;">
-            </div>
-        </div>
-        <script type="text/javascript" src="cameraPlugin.js"></script>
-        <script>
-            var takePicture = function() { $().cameraPlugin().capturePhoto(); };
-        </script>
-        <!-- End of Camera Plugin Sample -->
-
-
-    </div>
-    <div id="navbar"> <a href="#main" class="icon home">Home</a><a href="#cam" class="icon camera">Camera</a>
-    </div>
-    <header id="header_0" data-appbuilder-object="header">
-        <a id="backButton" href="#" class="button back" style="visibility: visible; ">Back</a>
-        <h1 id="pageTitle" class="">test</h1> 
-    </header>
-    <nav id="nav_0" data-appbuilder-object="nav">
-        <h1>Side Menu</h1>
-    </nav>
-</div>
-
+<body>
+<button id="captureWithData">Capture Photo With Image Data</button> <br>
+<button id="capture">Capture Photo With Image File URI</button> <br>
+<button onclick="getPhoto(pictureSource.PHOTOLIBRARY);">From Photo Library</button><br>
+<button onclick="getPhoto(pictureSource.SAVEDPHOTOALBUM);">From Photo Album</button><br>
+<button onclick="addContact();">Add Contact</button>
+<img style="display:none;width:60px;height:60px;" id="smallImage" src="" />
+<img style="display:none;" id="largeImage" src="" />
+</body>
 </html>
